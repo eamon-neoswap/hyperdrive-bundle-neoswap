@@ -270,8 +270,9 @@ export const getStarAtlasBundle = async (Data: {
         const fee = Data.toBuy.atlas.fees[key];
         feeAmount += fee.amount;
     }
+    console.log("initial feeAmount", feeAmount);
+    let toBuyFromDex = 0
 
-    let toBuyFromDex = 0;
     let buyFromGmTxs: TransactionInstruction[][] = [];
 
     if (Data.toBuy.gMListToBuy.length > 0) {
@@ -300,16 +301,19 @@ export const getStarAtlasBundle = async (Data: {
         // console.log("feeAmount2", feeAmount);
     }
 
+
     toBuyFromDex += (Data.toBuy.atlas.atlas.amount + feeAmount) * 10 ** 8;
+
     const nsFee = Math.ceil((toBuyFromDex * 0.1) / 100);
     feeAmount += nsFee;
     toBuyFromDex += nsFee;
+    
     if (!!!Data.toBuy.atlas.fees) Data.toBuy.atlas.fees = {};
     !!Data.toBuy.atlas.fees["neoswapFee"]
         ? (Data.toBuy.atlas.fees.neoswapFee.amount = nsFee)
         : (Data.toBuy.atlas.fees.neoswapFee = {
               amount: nsFee,
-              address: "DFmt1og31ZE61ibkXsCYQjV6cj1VUBv42RLcfTCRwzt8",
+              address: "FjecsBcSXQh4rjPSksh2eBiXUswcMpAwU25ykcr842j8",
           });
 
     let hasFees = feeAmount > 0 ? 1 : 0;
