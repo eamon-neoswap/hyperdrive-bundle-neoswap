@@ -271,10 +271,8 @@ export const getStarAtlasBundle = async (Data: {
         const fee = Data.toBuy.atlas.fees[key];
         feeAmount += fee.amount;
     }
-    console.log("feeAmount", feeAmount);
-    let hasFees = feeAmount > 0 ? 1 : 0;
-    let toBuyFromDex = (Data.toBuy.atlas.atlas.amount + feeAmount) * 10 ** 8;
-    console.log("ATLAS to buy from DEX minus GM", toBuyFromDex);
+    console.log("initial feeAmount", feeAmount);
+    let toBuyFromDex = 0
 
     // let atlasBought = 0;
     let buyFromGmTxs: TransactionInstruction[][] = [];
@@ -303,7 +301,24 @@ export const getStarAtlasBundle = async (Data: {
         buyFromGMData.map((item) => buyFromGmTxs.push(item.ixs));
         // console.log("feeAmount2", feeAmount);
     }
-    console.log("ATLAS to buy from DEX", toBuyFromDex);
+
+
+    toBuyFromDex += (Data.toBuy.atlas.atlas.amount + feeAmount) * 10 ** 8;
+
+    const nsFee = Math.ceil((toBuyFromDex * 0.1) / 100);
+    feeAmount += nsFee;
+    toBuyFromDex += nsFee;
+    
+    if (!!!Data.toBuy.atlas.fees) Data.toBuy.atlas.fees = {};
+    !!Data.toBuy.atlas.fees["neoswapFee"]
+        ? (Data.toBuy.atlas.fees.neoswapFee.amount = nsFee)
+        : (Data.toBuy.atlas.fees.neoswapFee = {
+              amount: nsFee,
+              address: "FjecsBcSXQh4rjPSksh2eBiXUswcMpAwU25ykcr842j8",
+          });
+
+    let hasFees = feeAmount > 0 ? 1 : 0;
+    console.log("ATLAS to buy from DEX ", toBuyFromDex / 10 ** 8);
 
     const buyAtlasData = await buyAtlasFromJupiterIx({
         quantityInAtlas: toBuyFromDex,

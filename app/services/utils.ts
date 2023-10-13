@@ -14,7 +14,10 @@ export async function getSolBalance(user: string | PublicKey) {
 }
 
 export function stateToBuy(state: any): InOutAtlasBundle {
-    let toBuy: InOutAtlasBundle = { atlas: { atlas: { amount: 0 } }, gMListToBuy: [] };
+    let toBuy: InOutAtlasBundle = {
+        atlas: { atlas: { amount: 0 } },
+        gMListToBuy: [],
+    };
     let itemToBuy: InOutAtlasBundle["gMListToBuy"] = [];
     for (const key in state) {
         let elem = state[key];
