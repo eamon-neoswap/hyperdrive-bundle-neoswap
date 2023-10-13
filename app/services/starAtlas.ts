@@ -1,11 +1,11 @@
 import { Idl, Program, Wallet } from "@coral-xyz/anchor";
 import {
     Connection,
+    LAMPORTS_PER_SOL,
     PublicKey,
     Transaction,
     TransactionInstruction,
     VersionedTransaction,
-    clusterApiUrl,
 } from "@solana/web3.js";
 import { GmClientService, Order } from "@staratlas/factory";
 import { delay } from "./utils";
@@ -90,7 +90,7 @@ const buyMintListFromGMIx = async (
 
     return await Promise.all(
         buyOrders.map(async (orderData) => {
-            console.log("\nXXXX\n ", orderData.order, orderData);
+            // console.log("\nXXXX\n ", orderData.order, orderData);
             const exchangeTx = await gmClientService.getCreateExchangeTransaction(
                 new Connection(
                     // clusterApiUrl("mainnet-beta")
@@ -199,7 +199,6 @@ const sendLamportsIx = async (Data: {
     mintAta?: string[];
 }): Promise<{ ixs: TransactionInstruction[]; mintAta: string[] }> => {
     let mintAta: string[] = [];
-    console.log("Data", Data.mintAta);
 
     if (!!Data.mintAta) mintAta = Data.mintAta;
 
@@ -221,7 +220,7 @@ const sendLamportsIx = async (Data: {
         owner: Data.to,
         signer: Data.from,
         //@ts-ignore
-        program,
+        connection: Data.connection,
     });
 
     let ixs: TransactionInstruction[] = [];
@@ -274,8 +273,8 @@ export const getStarAtlasBundle = async (Data: {
     console.log("initial feeAmount", feeAmount);
     let toBuyFromDex = 0
 
-    // let atlasBought = 0;
     let buyFromGmTxs: TransactionInstruction[][] = [];
+
     if (Data.toBuy.gMListToBuy.length > 0) {
         let buyFromGMData = await buyMintListFromGMIx({
             list: Data.toBuy.gMListToBuy,
@@ -343,7 +342,8 @@ export const getStarAtlasBundle = async (Data: {
     for (const key in Data.toBuy.atlas.fees) {
         let feeUserData = Data.toBuy.atlas.fees[key];
         if (feeUserData.amount > 0) {
-            let uiAmount = Math.ceil(feeUserData.amount * 10 ** 8);
+            let uiAmount = Math.ceil(feeUserData.amount);
+            feeUserData.amount = uiAmount / 10 ** 8;
             let feeAddress = new PublicKey(feeUserData.address);
             let feeIxData = await sendLamportsIx({
                 from: Data.user,
@@ -356,13 +356,24 @@ export const getStarAtlasBundle = async (Data: {
             // console.log("feeIxData", feeIxData);
             mintAta = feeIxData.mintAta;
             ixToSend.push(...feeIxData.ixs);
-            console.log("Added Fees for ", key, "  ", uiAmount, " to ", feeAddress.toBase58());
+            console.log(
+                "Added Fees for ",
+                key,
+                "  ",
+                uiAmount / LAMPORTS_PER_SOL,
+                " to ",
+                feeAddress.toBase58()
+            );
+            console.log(Data.toBuy.atlas.fees[key]);
         }
     }
-    if (ixToSend.length > 0)
-        broadcastVTx.push(
-            new VersionedTransaction(new Transaction().add(...ixToSend).compileMessage())
-        );
+
+    if (ixToSend.length > 0) {
+        let feeTx = new Transaction().add(...ixToSend);
+        feeTx.feePayer = Data.user;
+        feeTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        broadcastVTx.push(new VersionedTransaction(feeTx.compileMessage()));
+    }
 
     console.log("there are ", broadcastVTx.length, "transactions to be sent");
     if (!Data.wallet.signAllTransactions) throw "no solanaWallet.signAllTransactions";
@@ -382,11 +393,9 @@ export const getStarAtlasBundle = async (Data: {
             const hashes = await connection.sendRawTransaction(signedtx.serialize(), {
                 skipPreflight: !first,
             });
-            console.log("hashes", hashes);
-            // break
+          
             hashs.push(hashes);
             console.log(index + " - " + hashes);
-            // console.log(index, signedTxs.length - 1);
 
             if (first) {
                 console.log("waitng for first transaction to be confirmed ...");
@@ -410,22 +419,14 @@ export const getStarAtlasBundle = async (Data: {
             } else {
                 if (Data.toBuy.gMListToBuy.length >= index)
                     Data.toBuy.gMListToBuy[index - 1].hash = hashes;
-
-                // if (signedTxs.length % 2 === 1) {
-                //     console.log("index", 2 * (index - 1) + 1, "exists");
-
-                //     toBuy.gMListToBuy[2 * (index - 1) + 1].hash = hashes;
-                // } else {
-                //     console.log("index", 2 * (index - 1) + 1, "does not exist exists");
-                // }
             }
         }
     }
 
     console.log("toBuy", Data.toBuy);
     let latestBcData = await connection.getLatestBlockhash();
-    console.log("Initialization of Transaction verifiation");
 
+    console.log("Initialization of Transaction verifiation");
     const validhahs = await Promise.all(
         hashs.map(async (hash) => {
             return {
@@ -440,8 +441,10 @@ export const getStarAtlasBundle = async (Data: {
     validhahs.forEach((valid) => {
         console.log("validatinng", valid.hash, " ...");
 
-        if (!!valid.confirmData.value.err)
+        if (!!valid.confirmData.value.err) {
+            console.error("error sending transaction", valid.hash, "\n", validhahs);
             throw `error sending transaction${valid.hash} \nthrough ${validhahs}`;
+        }
     });
     console.log("all Transactions validated");
 
