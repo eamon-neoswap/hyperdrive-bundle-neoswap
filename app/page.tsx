@@ -1,20 +1,43 @@
 "use client";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Bundle from "./_components/Bundle";
 import { stateToBuy } from "./services/utils";
 import { getStarAtlasBundle } from "./services/starAtlas";
+import { Wallet } from "@coral-xyz/anchor";
 
 export default function Home() {
+  const [balance, setBalance] = useState(0)
   const [state, setState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
+  const { connection } = useConnection();
 
   const setOrderQuantity = (data: { [itemId: string]: number }) => {
     setState({ ...state, ...data });
   };
+
+
+  useEffect(() => {
+    const getSolBalance = async () => {
+      if (!publicKey) return;
+      try {
+        const fetchedBalance = await connection.getBalance(
+          publicKey,
+          'confirmed'
+        );
+        console.log('fetched balance', fetchedBalance)
+        setBalance(fetchedBalance / LAMPORTS_PER_SOL)
+      } catch (e) {
+        console.log(`error getting balance: `, e);
+      }
+    }
+    
+    getSolBalance()
+  }, [publicKey, connection])
 
   const handleSubmit = async () => {
     if (!publicKey || !wallet) throw "";
@@ -29,10 +52,9 @@ export default function Home() {
       const toBuy = stateToBuy(state);
 
       console.log("toBuy", toBuy);
-      //@ts-ignore
       const res = await getStarAtlasBundle({
         user: publicKey,
-        wallet: wallet.adapter,
+        wallet: wallet.adapter as unknown as Wallet,
         toBuy,
       });
       console.log(res);
