@@ -1,7 +1,7 @@
 "use client";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Bundle from "./_components/Bundle";
@@ -10,7 +10,7 @@ import { getStarAtlasBundle } from "./services/starAtlas";
 import { Wallet } from "@coral-xyz/anchor";
 
 export default function Home() {
-  const [balance, setBalance] = useState(0)
+  const [balance, setBalance] = useState(0);
   const [state, setState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
@@ -20,24 +20,23 @@ export default function Home() {
     setState({ ...state, ...data });
   };
 
-
   useEffect(() => {
     const getSolBalance = async () => {
       if (!publicKey) return;
       try {
         const fetchedBalance = await connection.getBalance(
           publicKey,
-          'confirmed'
+          "confirmed"
         );
-        console.log('fetched balance', fetchedBalance)
-        setBalance(fetchedBalance / LAMPORTS_PER_SOL)
+        console.log("fetched balance", fetchedBalance);
+        setBalance(fetchedBalance / LAMPORTS_PER_SOL);
       } catch (e) {
         console.log(`error getting balance: `, e);
       }
-    }
-    
-    getSolBalance()
-  }, [publicKey, connection])
+    };
+
+    getSolBalance();
+  }, [publicKey, connection]);
 
   const handleSubmit = async () => {
     if (!publicKey || !wallet) throw "";
@@ -86,13 +85,19 @@ export default function Home() {
       <div>
         <WalletMultiButton />
       </div>
+
       {connected && (
-        <Bundle
-          setOrderQuantity={setOrderQuantity}
-          handleSubmit={handleSubmit}
-          orderQuantity={state}
-          isSubmitting={isSubmitting}
-        />
+        <>
+          <div className="text-white">
+            <span className="uppercase font-bold">Balance:</span> {balance} SOL
+          </div>
+          <Bundle
+            setOrderQuantity={setOrderQuantity}
+            handleSubmit={handleSubmit}
+            orderQuantity={state}
+            isSubmitting={isSubmitting}
+          />
+        </>
       )}
     </main>
   );
