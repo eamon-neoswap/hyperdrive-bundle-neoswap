@@ -40,7 +40,7 @@ export default function Home() {
   }, [publicKey, connection])
 
   const handleSubmit = async () => {
-    if (!publicKey || !wallet) throw "";
+    if (!publicKey || !wallet) throw "connect wallet";
     // console.log(state);
 
     if (Object.keys(state).length === 0) {
@@ -60,6 +60,10 @@ export default function Home() {
       console.log(res);
       alert("success");
       return res;
+    }catch (error) {
+      console.log(error);
+      
+      alert(error)
     } finally {
       setIsSubmitting(false);
     }
