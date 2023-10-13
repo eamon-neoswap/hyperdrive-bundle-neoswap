@@ -1,15 +1,18 @@
-import Image from "next/image";
 import { data } from "../_data";
+
+interface Props {
+  handleSubmit: () => void;
+  setOrderQuantity: (data: any) => void;
+  orderQuantity: { [itemId: string]: number };
+  isSubmitting: boolean;
+}
 
 export default function Bundle({
   handleSubmit,
   setOrderQuantity,
   orderQuantity,
-}: {
-  handleSubmit: () => void;
-  setOrderQuantity: (data: any) => void;
-  orderQuantity: { [itemId: string]: number };
-}) {
+  isSubmitting,
+}: Props) {
   return (
     <div className="w-full flex flex-col gap-10">
       <div className="flex flex-row w-full rounded-2xl p-2 gap-4 flex-wrap justify-center">
@@ -79,6 +82,7 @@ export default function Bundle({
         <button
           onClick={handleSubmit}
           className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-4 px-6 border border-blue-500 hover:border-transparent rounded"
+          disabled={isSubmitting}
         >
           Buy Now
         </button>

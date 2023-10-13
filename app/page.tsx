@@ -9,6 +9,7 @@ import { getStarAtlasBundle } from "./services/starAtlas";
 
 export default function Home() {
   const [state, setState] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
 
   const setOrderQuantity = (data: { [itemId: string]: number }) => {
@@ -20,17 +21,26 @@ export default function Home() {
     // console.log(state);
 
     if (Object.keys(state).length === 0) {
-        alert("no item selected");
-        throw "no item selected";
+      alert("no item selected");
+      throw "no item selected";
     }
-    const toBuy = stateToBuy(state);
+    try {
+      setIsSubmitting(true);
+      const toBuy = stateToBuy(state);
 
-    console.log("toBuy", toBuy);
-    //@ts-ignore
-    const res = await getStarAtlasBundle({ user: publicKey, wallet: wallet.adapter, toBuy });
-    console.log(res);
-    alert("success");
-    return res;
+      console.log("toBuy", toBuy);
+      //@ts-ignore
+      const res = await getStarAtlasBundle({
+        user: publicKey,
+        wallet: wallet.adapter,
+        toBuy,
+      });
+      console.log(res);
+      alert("success");
+      return res;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,6 +69,7 @@ export default function Home() {
           setOrderQuantity={setOrderQuantity}
           handleSubmit={handleSubmit}
           orderQuantity={state}
+          isSubmitting={isSubmitting}
         />
       )}
     </main>
