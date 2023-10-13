@@ -4,17 +4,33 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import Image from "next/image";
 import { useState } from "react";
 import Bundle from "./_components/Bundle";
+import { stateToBuy } from "./services/utils";
+import { getStarAtlasBundle } from "./services/starAtlas";
 
 export default function Home() {
   const [state, setState] = useState({});
-  const { connected } = useWallet();
+  const { connected, publicKey, wallet } = useWallet();
 
   const setOrderQuantity = (data: { [itemId: string]: number }) => {
     setState({ ...state, ...data });
   };
 
-  const handleSubmit = () => {
-    alert(JSON.stringify(state));
+  const handleSubmit = async () => {
+    if (!publicKey || !wallet) throw "";
+    // console.log(state);
+
+    if (Object.keys(state).length === 0) {
+        alert("no item selected");
+        throw "no item selected";
+    }
+    const toBuy = stateToBuy(state);
+
+    console.log("toBuy", toBuy);
+    //@ts-ignore
+    const res = await getStarAtlasBundle({ user: publicKey, wallet: wallet.adapter, toBuy });
+    console.log(res);
+    alert("success");
+    return res;
   };
 
   return (
