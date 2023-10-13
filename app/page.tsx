@@ -5,7 +5,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Bundle from "./_components/Bundle";
-import { stateToBuy } from "./services/utils";
+import { getSolBalance, stateToBuy } from "./services/utils";
 import { getStarAtlasBundle } from "./services/starAtlas";
 import { Wallet } from "@coral-xyz/anchor";
 
@@ -20,22 +20,21 @@ export default function Home() {
     setState({ ...state, ...data });
   };
 
+  const roundBalance = (balance: number) => Math.round(balance * 10000) / 10000;
+
   useEffect(() => {
-    const getSolBalance = async () => {
+    const getBalance = async () => {
       if (!publicKey) return;
       try {
-        const fetchedBalance = await connection.getBalance(
-          publicKey,
-          "confirmed"
-        );
+        const fetchedBalance = await getSolBalance(publicKey);
         console.log("fetched balance", fetchedBalance);
-        setBalance(fetchedBalance / LAMPORTS_PER_SOL);
+        setBalance(roundBalance(fetchedBalance / LAMPORTS_PER_SOL));
       } catch (e) {
         console.log(`error getting balance: `, e);
       }
     };
 
-    getSolBalance();
+    getBalance();
   }, [publicKey, connection]);
 
   const handleSubmit = async () => {
