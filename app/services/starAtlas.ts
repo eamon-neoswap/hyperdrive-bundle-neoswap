@@ -26,7 +26,7 @@ const buyAtlasFromJupiterIx = async (Data: {
     connection?: Connection;
 }): Promise<VersionedTransaction> => {
     // console.log("solanaEallet", solanaWallet);
-
+    if (Data.quantityInAtlas === 0) throw "nothing found to buy";
     if (!Data.connection)
         Data.connection = new Connection(
             "https://compatible-late-wildflower.solana-mainnet.quiknode.pro/58382ac09eaaeea48164b2f768abeb4b522bf3e0/"
@@ -35,9 +35,9 @@ const buyAtlasFromJupiterIx = async (Data: {
     const route = (
         await (
             await fetch(
-                `https://quote-api.jup.ag/v4/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${ATLAS_MINT.toBase58()}&amount=${
-                    Math.ceil(Data.quantityInAtlas) + 1
-                }&swapMode=ExactOut&slippageBps=50` //&platformFeeBps=15
+                `https://quote-api.jup.ag/v4/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${ATLAS_MINT.toBase58()}&amount=${Math.ceil(
+                    Data.quantityInAtlas
+                )}&swapMode=ExactOut&slippageBps=50` //&platformFeeBps=15
             )
         ).json()
     ).data[0];

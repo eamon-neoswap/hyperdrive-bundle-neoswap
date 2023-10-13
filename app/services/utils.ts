@@ -23,6 +23,7 @@ export function stateToBuy(state: any): InOutAtlasBundle {
     let itemToBuy: InOutAtlasBundle["gMListToBuy"] = [];
     for (const key in state) {
         let elem = state[key];
+        if (Number(elem) === 0) continue;
         if (Number(elem) < 0) {
             alert("Quantity must be positive");
             throw `Quantity must be positive \n ${key} - ${Number(elem)}`;

@@ -1,16 +1,16 @@
 "use client";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Bundle from "./_components/Bundle";
-import { stateToBuy } from "./services/utils";
+import { getSolBalance, stateToBuy } from "./services/utils";
 import { getStarAtlasBundle } from "./services/starAtlas";
 import { Wallet } from "@coral-xyz/anchor";
 
 export default function Home() {
-  const [balance, setBalance] = useState(0)
+  const [balance, setBalance] = useState(0);
   const [state, setState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
@@ -20,27 +20,25 @@ export default function Home() {
     setState({ ...state, ...data });
   };
 
+  const roundBalance = (balance: number) => Math.round(balance * 10000) / 10000;
 
   useEffect(() => {
-    const getSolBalance = async () => {
+    const getBalance = async () => {
       if (!publicKey) return;
       try {
-        const fetchedBalance = await connection.getBalance(
-          publicKey,
-          'confirmed'
-        );
-        console.log('fetched balance', fetchedBalance)
-        setBalance(fetchedBalance / LAMPORTS_PER_SOL)
+        const fetchedBalance = await getSolBalance(publicKey);
+        console.log("fetched balance", fetchedBalance);
+        setBalance(roundBalance(fetchedBalance / LAMPORTS_PER_SOL));
       } catch (e) {
         console.log(`error getting balance: `, e);
       }
-    }
-    
-    getSolBalance()
-  }, [publicKey, connection])
+    };
+
+    getBalance();
+  }, [publicKey, connection]);
 
   const handleSubmit = async () => {
-    if (!publicKey || !wallet) throw "";
+    if (!publicKey || !wallet) throw "connect wallet";
     // console.log(state);
 
     if (Object.keys(state).length === 0) {
@@ -60,6 +58,10 @@ export default function Home() {
       console.log(res);
       alert("success");
       return res;
+    }catch (error) {
+      console.log(error);
+      
+      alert(error)
     } finally {
       setIsSubmitting(false);
     }
@@ -86,13 +88,19 @@ export default function Home() {
       <div>
         <WalletMultiButton />
       </div>
+
       {connected && (
-        <Bundle
-          setOrderQuantity={setOrderQuantity}
-          handleSubmit={handleSubmit}
-          orderQuantity={state}
-          isSubmitting={isSubmitting}
-        />
+        <>
+          <div className="text-white">
+            <span className="uppercase font-bold">Balance:</span> {balance} SOL
+          </div>
+          <Bundle
+            setOrderQuantity={setOrderQuantity}
+            handleSubmit={handleSubmit}
+            orderQuantity={state}
+            isSubmitting={isSubmitting}
+          />
+        </>
       )}
     </main>
   );
