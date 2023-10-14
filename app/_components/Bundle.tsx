@@ -2,12 +2,14 @@ import { data } from "../_data";
 
 interface Props {
   handleSubmit: () => void;
+  getPrice: () => void;
   setOrderQuantity: (data: any) => void;
   orderQuantity: { [itemId: string]: number };
   isSubmitting: boolean;
 }
 
 export default function Bundle({
+  getPrice,
   handleSubmit,
   setOrderQuantity,
   orderQuantity,
@@ -80,6 +82,13 @@ export default function Bundle({
         })}
       </div>
       <div className="flex w-full justify-center">
+        <button
+          onClick={getPrice}
+          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-4 px-6 border border-blue-500 hover:border-transparent rounded"
+          disabled={isSubmitting}
+        >
+          estimate prices
+        </button>
         <button
           onClick={handleSubmit}
           className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-4 px-6 border border-blue-500 hover:border-transparent rounded"

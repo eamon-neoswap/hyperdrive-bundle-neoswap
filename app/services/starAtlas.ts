@@ -77,9 +77,34 @@ const buyAtlasFromJupiterIx = async (Data: {
     // console.log("vTransaction", vTransaction);
     return vTransaction;
 };
+const getAtlasFromJupiterPrice = async (Data: {
+    quantityInAtlas: number;
+    // connection?: Connection;
+}): Promise<{
+    atlas: any;
+    sol: any;
+}> => {
+    if (Data.quantityInAtlas === 0) return { atlas: 0, sol: 0 };
+
+    const route = (
+        await (
+            await fetch(
+                `https://quote-api.jup.ag/v4/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${ATLAS_MINT.toBase58()}&amount=${Math.ceil(
+                    Data.quantityInAtlas * 10 ** 8
+                )}&swapMode=ExactOut&slippageBps=50` //&platformFeeBps=15
+            )
+        ).json()
+    ).data[0];
+    console.log("ATLAS buying route", route);
+
+    console.log({ atlas: route.outAmount, sol: route.inAmount });
+
+    return { atlas: route.outAmount / 10 ** 8, sol: route.inAmount / LAMPORTS_PER_SOL };
+};
 const buyMintListFromGMIx = async (
     Data: { list: InOutAtlasBundle["gMListToBuy"]; user: PublicKey } // { mint: PublicKey; quantity: number }[]
-): Promise<{ ixs: TransactionInstruction[]; priceBought: number }[]> => {
+): Promise<{ ixs: TransactionInstruction[]; priceBought: number; mint: string }[]> => {
+    if (Data.list.length === 0) return [];
     const gmClientService = new GmClientService();
     console.log("Data", Data);
 
@@ -108,6 +133,7 @@ const buyMintListFromGMIx = async (
             return {
                 ixs: exchangeTx.transaction.instructions,
                 priceBought: buyPrice,
+                mint: orderData.mint,
             };
         })
     );
@@ -145,34 +171,22 @@ const getStarAtlasOrders = async (list: InOutAtlasBundle["gMListToBuy"]) => {
         const item = list[index];
 
         let orders = sellingOrders
-            // .filter((order) => order.orderQtyRemaining >= item.quantity)
             .filter((order) => order.orderMint.includes(item.mint))
             .filter((order) => order.currencyMint.includes(ATLAS_MINT.toBase58()))
             .sort((orderA, orderB) => orderA.uiPrice - orderB.uiPrice);
         if (orders.length === 0) throw "no orders found";
-        // console.log(
-        //     item.mint,
-        //     `\n`,
-        //     item.maxPrice,
-        //     "xx - xx",
-        //     orders[0].price.toNumber() * item.quantity
-        // );
+
         let quantity = item.quantity;
         for (let index = 0; index < orders.length; index++) {
             const order = orders[index];
 
-            if (!!item.maxPrice && order.price.toNumber() * item.quantity > item.maxPrice)
-                throw `item too pricy ${order.price.toNumber() * item.quantity} (front) > (back) ${
-                    item.maxPrice
-                }`;
             // console.log(order.orderQtyRemaining, "(GM) QUANTITIS (rest)", quantity);
 
             if (order.orderQtyRemaining >= quantity) {
-                // quantity = 0;
                 returnArray.push({
                     order: order,
                     mint: item.mint,
-                    quantity: quantity,
+                    quantity,
                     maxPrice: item.maxPrice,
                 });
                 break;
@@ -271,7 +285,7 @@ export const getStarAtlasBundle = async (Data: {
         feeAmount += fee.amount;
     }
     console.log("initial feeAmount", feeAmount);
-    let toBuyFromDex = 0
+    let toBuyFromDex = 0;
 
     let buyFromGmTxs: TransactionInstruction[][] = [];
 
@@ -301,13 +315,12 @@ export const getStarAtlasBundle = async (Data: {
         // console.log("feeAmount2", feeAmount);
     }
 
-
     toBuyFromDex += (Data.toBuy.atlas.atlas.amount + feeAmount) * 10 ** 8;
 
     const nsFee = Math.ceil((toBuyFromDex * 0.1) / 100);
     feeAmount += nsFee;
     toBuyFromDex += nsFee;
-    
+
     if (!!!Data.toBuy.atlas.fees) Data.toBuy.atlas.fees = {};
     !!Data.toBuy.atlas.fees["neoswapFee"]
         ? (Data.toBuy.atlas.fees.neoswapFee.amount = nsFee)
@@ -360,7 +373,7 @@ export const getStarAtlasBundle = async (Data: {
                 "Added Fees for ",
                 key,
                 "  ",
-                uiAmount / LAMPORTS_PER_SOL,
+                uiAmount / 10 ** 8,
                 " to ",
                 feeAddress.toBase58()
             );
@@ -393,7 +406,7 @@ export const getStarAtlasBundle = async (Data: {
             const hashes = await connection.sendRawTransaction(signedtx.serialize(), {
                 skipPreflight: !first,
             });
-          
+
             hashs.push(hashes);
             console.log(index + " - " + hashes);
 
@@ -450,6 +463,71 @@ export const getStarAtlasBundle = async (Data: {
 
     return Data.toBuy;
 };
+export const getStarAtlasPrices = async (Data: {
+    toBuy: InOutAtlasBundle;
+    user: PublicKey;
+}): Promise<{
+    feesData: {
+        [name: string]: {
+            amount: number;
+            address: string;
+            hash?: string | undefined;
+        };
+    };
+    itemsData: {
+        price: number;
+        mint: string;
+    }[];
+    atlasData: {
+        atlas: any;
+        sol: any;
+    };
+}> => {
+    // console.log("solanaWallet", solanaWallet);
+
+    let feeAmount = 0;
+    for (const key in Data.toBuy.atlas.fees) {
+        const fee = Data.toBuy.atlas.fees[key];
+        feeAmount += fee.amount;
+    }
+    console.log("initial feeAmount Atlas", feeAmount);
+
+    let itemsDataIx = await buyMintListFromGMIx({
+        list: Data.toBuy.gMListToBuy,
+        user: Data.user,
+    });
+
+    // if (itemsDataIx.length === 0) throw "couldn't buy from GM";
+
+    let atlasConsumedInGM = 0;
+    let itemsData = itemsDataIx.map((acc) => {
+        atlasConsumedInGM += acc.priceBought;
+        return { price: acc.priceBought, mint: acc.mint };
+    });
+    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", atlasConsumedInGM);
+
+    let toBuyFromDex = Data.toBuy.atlas.atlas.amount + atlasConsumedInGM;
+    console.log("XXXXvvvvvvXXXXXXXXXXXXXXXXXXXXXXXXXXXX", toBuyFromDex);
+
+    const nsFee = Math.ceil((toBuyFromDex * 10 ** 8 * 0.1) / 100) / 10 ** 8;
+    console.log("nsFee", nsFee);
+
+    if (!!!Data.toBuy.atlas.fees) Data.toBuy.atlas.fees = {};
+    !!Data.toBuy.atlas.fees["neoswapFee"]
+        ? (Data.toBuy.atlas.fees.neoswapFee.amount = nsFee)
+        : (Data.toBuy.atlas.fees.neoswapFee = {
+              amount: nsFee,
+              address: "FjecsBcSXQh4rjPSksh2eBiXUswcMpAwU25ykcr842j8",
+          });
+
+    let feesData = Data.toBuy.atlas.fees;
+    toBuyFromDex += feeAmount + nsFee;
+    console.log("XXXXvvvvvvXXXXXXXXXXXXXXXXXXXXXXXXXXXX", toBuyFromDex);
+
+    let atlasData = await getAtlasFromJupiterPrice({ quantityInAtlas: toBuyFromDex });
+
+    return { feesData, itemsData, atlasData };
+};
 
 const ix2vTx = async (
     ixs: TransactionInstruction[][],
@@ -486,3 +564,39 @@ const ix2vTx = async (
 };
 
 export async function getPriceGM(list: InOutAtlasBundle["gMListToBuy"]) {}
+
+export const styles = {
+    container: {
+        fontFamily: "Arial, sans-serif",
+        color: "#333",
+    },
+    header: {
+        fontFamily: "cursive",
+        color: "blue",
+        fontSize: "2.5em",
+    },
+    paragraph: {
+        fontSize: "1.2em",
+        fontStyle: "italic",
+        color: "darkgreen",
+    },
+    instructionHeader: {
+        fontSize: "2em",
+        fontWeight: "bold",
+        color: "purple",
+    },
+    instructions: {
+        fontSize: "1.2em",
+        fontWeight: "bold",
+        color: "purple",
+    },
+    faq: {
+        fontSize: "1.2em",
+        color: "red",
+    },
+    faqHeader: {
+        fontSize: "2em",
+        fontWeight: "bold",
+        color: "red",
+    },
+};
