@@ -126,8 +126,8 @@ export default function Bundle({
       </div>
       <div className="flex flex-col w-full gap-2 text-white items-center">
         <div>Price Estimates</div>
-        <div>Sol: {priceData?.atlasData?.sol ?? '--'}</div>
-        <div>Atlas: {priceData?.atlasData?.atlas ?? '--'}</div>
+        <div><span className="uppercase font-bold">SOL:</span> {priceData?.atlasData?.sol ?? '--'}</div>
+        <div><span className="uppercase font-bold">ATLAS:</span> {priceData?.atlasData?.atlas ?? '--'}</div>
       </div>
       <div className="flex w-full justify-center gap-5">
         <button
