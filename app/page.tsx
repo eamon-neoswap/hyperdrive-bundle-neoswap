@@ -204,7 +204,7 @@ export default function Home() {
         <br />
 
         <p style={styles.paragraph}>
-          As a dedicated gamer, I've often found myself in dire straits within
+          As a dedicated gamer, I&apos;ve often found myself in dire straits within
           StarAtlas—stranded in the cosmic abyss, lacking essentials like fuel,
           ammo, and food.
         </p>
@@ -229,7 +229,7 @@ export default function Home() {
         </p>
         <br />
         <p style={styles.paragraph}>
-          With NeoSwap's help, I'm conquering the galaxy, turning the tables on
+          With NeoSwap&apos;s help, I&apos;m conquering the galaxy, turning the tables on
           adversity, all while embracing my lazy gamer spirit.
         </p>
 
