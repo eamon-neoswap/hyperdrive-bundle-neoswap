@@ -97,7 +97,7 @@ export default function Bundle({
                   </div>
                 </div>
                 <div className="self-stretch justify-start items-start gap-[6.61px] inline-flex text-white text-[10px]">
-                  <span>Price: {getPriceInfo(ele.mint, priceData)}</span>
+                  <span>Total price in ATLAS: {getPriceInfo(ele.mint, priceData)}</span>
                 </div>
               </div>
 
