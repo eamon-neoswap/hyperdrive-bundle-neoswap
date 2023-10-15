@@ -196,7 +196,10 @@ export default function Home() {
             specific items you want to buy
           </li>
           <li style={styles.instructions}>
-            3) Click on *Buy* and let magic happens
+            (OPTIONAL) Click on *Estimate Prices* to get an estimation of prices (it will appear over the quantity field for each item)
+          </li>          
+          <li style={styles.instructions}>
+            3) Click on *Buy Now* and let magic happens
           </li>
         </ol>
 
@@ -219,7 +222,7 @@ export default function Home() {
           vital items and resources.
         </p>
         <p style={styles.paragraph}>
-          The tool excelled at sourcing the cheapest orders, securing the best
+          The tool excelles at sourcing the cheapest orders, securing the best
           deals with minimal effort.
         </p>
         <br />
@@ -238,22 +241,22 @@ export default function Home() {
 
         <h2 style={styles.faqHeader}>FAQ:</h2>
 
-        <p style={styles.faq}>
+        <p style={styles.faqTitle}>
           <strong>-- What is happening?</strong>
         </p>
         <p style={styles.faq}>
           Our bot scans Star Atlas Galactic Market to find the cheapest items
           and compiles everything in a bundle of transactions that only requires
-          one signature. Neoswap Bundle is the fastest and easiest way to buy
+          one signature. Neoswap Bundle is the fastest, easiest and cheapest way to buy
           your resources on Star Atlas.
         </p>
         <br />
-        <p style={styles.faq}>
+        <p style={styles.faqTitle}>
           <strong>-- Will there be other games integrated?</strong>
         </p>
         <p style={styles.faq}>
           Yes, we plan to standardize Marketplaces interaction with a suite of
-          tools to allow users to make their custom bundle on games on Solana.
+          tools to allow users to make their custom bundle for games on Solana.
         </p>
       </div>
     </main>

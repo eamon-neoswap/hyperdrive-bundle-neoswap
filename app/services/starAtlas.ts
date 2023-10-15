@@ -573,29 +573,34 @@ export const styles = {
     header: {
         fontFamily: "cursive",
         color: "blue",
-        fontSize: "2.5em",
+        fontSize: "5em",
     },
     paragraph: {
-        fontSize: "1.2em",
+        fontSize: "1.8em",
         fontStyle: "italic",
         color: "darkgreen",
     },
     instructionHeader: {
-        fontSize: "2em",
+        fontSize: "4em",
         fontWeight: "bold",
         color: "purple",
     },
     instructions: {
-        fontSize: "1.2em",
+        fontSize: "2em",
         fontWeight: "bold",
         color: "purple",
     },
     faq: {
-        fontSize: "1.2em",
+        fontSize: "1.5em",
         color: "red",
     },
     faqHeader: {
-        fontSize: "2em",
+        fontSize: "4em",
+        fontWeight: "bold",
+        color: "red",
+    },
+    faqTitle: {
+        fontSize: "2.5em",
         fontWeight: "bold",
         color: "red",
     },
