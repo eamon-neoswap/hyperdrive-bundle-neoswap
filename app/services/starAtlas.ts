@@ -575,6 +575,12 @@ export const styles = {
         color: "blue",
         fontSize: "5em",
     },
+    subHeader:{
+        fontFamily: "cursive",
+        color: "blue",
+        fontSize: "4em",
+        fontStyle: "italic",
+    },
     paragraph: {
         fontSize: "1.8em",
         fontStyle: "italic",
