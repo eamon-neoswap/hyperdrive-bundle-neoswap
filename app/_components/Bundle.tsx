@@ -113,12 +113,17 @@ export default function Bundle({
                   id={`quantity_${ele.itemId}`}
                   type="number"
                   placeholder="0"
-                  value={orderQuantity[ele.itemId] || 0}
+                  value={
+                      orderQuantity[ele.itemId] === undefined
+                          ? ""
+                          : orderQuantity[ele.itemId]
+                  } 
                   min={0}
                   onChange={(e) => {
-                    setOrderQuantity({ [ele.itemId]: e.target.value });
+                    const cleanedValue = parseInt(e.target.value) || 0;
+                    setOrderQuantity({ [ele.itemId]: cleanedValue });
                   }}
-                />
+              />
               </div>
             </div>
           );
