@@ -178,7 +178,7 @@ export default function Home() {
       )}
       <div style={styles.container}>
         <h1 style={styles.header}>
-          Welcome to NeoSwapn Gaming Bundles 
+          Welcome to NeoSwap Gaming Bundles 
         </h1>
         <h1 style={styles.subHeader}>
          Your Solana Games Companion
